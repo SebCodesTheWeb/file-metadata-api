@@ -5,6 +5,10 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 dotenv.config();
+import { FileController } from './file/file.controller';
+import { FileService } from './file/file.service';
+import { FileModule } from './file/file.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -17,8 +21,9 @@ dotenv.config();
       autoLoadEntities: true,
       synchronize: true,
     }),
+    FileModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, FileController],
+  providers: [AppService, FileService],
 })
 export class AppModule {}
