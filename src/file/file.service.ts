@@ -3,16 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { File } from './file.entity';
 import { FileDTO } from './file.dto';
-import * as AWS from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
-
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
-const s3 = new AWS.S3();
+import { s3 } from './s3-client';
+import { Readable } from 'stream';
 
 @Injectable()
 export class FileService {
@@ -34,7 +27,32 @@ export class FileService {
     await this.fileRepo.save(extendedFileMeta);
   }
 
-  async uploadFile(file: Express.File): Promise<File> {
+  async getFile(fileId: string): Promise<File> {
+    const file = await this.fileRepo.findOneBy({ id: fileId });
+    return file;
+  }
+
+  async deleteFile(file: File): Promise<void> {
+    const s3Params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: file.s3_key,
+    };
+
+    await s3.deleteObject(s3Params).promise();
+    await this.fileRepo.delete(file.id);
+  }
+
+  async downloadFile(file_s3_key: string): Promise<Readable> {
+    const downloadParams = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: file_s3_key,
+    };
+
+    const s3ReadStream = s3.getObject(downloadParams).createReadStream();
+    return s3ReadStream;
+  }
+
+  async uploadFile(file: Express.Multer.File): Promise<File> {
     const s3Key = uuidv4();
     const uploadParams = {
       Bucket: process.env.AWS_S3_BUCKET_NAME,

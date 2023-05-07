@@ -3,8 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as dotenv from 'dotenv';
-dotenv.config();
 import { FileController } from './file/file.controller';
 import { FileService } from './file/file.service';
 import { FileModule } from './file/file.module';
